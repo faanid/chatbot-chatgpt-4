@@ -1,1 +1,6 @@
-# chatbot-chatgpt-4
+
+Quick start:
+
+```
+$ npm install
+$ npm start
