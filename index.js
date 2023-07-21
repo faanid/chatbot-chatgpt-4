@@ -1,5 +1,7 @@
 import { Configuration, OpenAIApi } from "openai";
 import { process } from "./env";
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, push } from "firebase/database";
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -7,20 +9,28 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 
+const appSettings = {
+  databaseURL:
+    "https://console.firebase.google.com/project/knowitall-openai-6cd05/database/knowitall-openai-6cd05-default-rtdb/data/~2F",
+};
+const app = initializeApp(appSettings);
+
+const database = getDatabase(app);
+
+const conversationInDb = ref(database);
+
 const chatbotConversation = document.getElementById("chatbot-conversation");
-const conversationArr = [
-  {
-    //Conversation Array - instructions setup - two key value pairs = role and content
-    role: "system", //This should correspond to the value 'user'.
-    content: "You are an assistant that gives very short answers.", //this should correspond to a string holding whatever the user has inputted.
-    //And control the chatbot's personality
-  },
-];
+const instructionObj = {
+  //Conversation Array - instructions setup - two key value pairs = role and content
+  role: "system", //This should correspond to the value 'user'.
+  content: "You are an assistant that gives very short answers.", //this should correspond to a string holding whatever the user has inputted.
+  //And control the chatbot's personality
+};
 
 document.addEventListener("submit", (e) => {
   e.preventDefault();
   const userInput = document.getElementById("user-input");
-  conversationArr.push({
+  push(conversationInDb, {
     //User's input
     role: "user",
     content: userInput.value,
