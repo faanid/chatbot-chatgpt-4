@@ -1,7 +1,7 @@
 import { Configuration, OpenAIApi } from "openai";
 import { process } from "./env";
 import { initializeApp } from "firebase/app";
-import { getDatabase, ref, push } from "firebase/database";
+import { getDatabase, ref, push, get } from "firebase/database"; //not install firebase
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -44,18 +44,25 @@ document.addEventListener("submit", (e) => {
   chatbotConversation.scrollTop = chatbotConversation.scrollHeight;
 });
 
-async function fetchReply() {
-  const response = await openai.createChatCompletion({
-    //create chat completion
-    model: "gpt-4",
-    message: conversationArr,
-    presence_penalty: 0,
-    frequency_penalty: 0.3,
+function fetchReply() {
+  get(conversationInDb).then(async (snapshot) => {
+    if (snapshot.exists()) {
+      const conversationArr = Object.values(snapshot.val());
+      conversationArr.unshift(instructionObj);
+      const response = await openai.createChatCompletion({
+        //create chat completion
+        model: "gpt-4",
+        messages: conversationArr,
+        presence_penalty: 0,
+        frequency_penalty: 0.3,
+      });
+      //Render the output, update the array
+      conversationArr.push(response.data.choices[0].message);
+      renderTypewriterText(response.data.choices[0].message.content);
+    } else {
+      console.log("No data available");
+    }
   });
-  //Render the output, update the array
-  conversationArr.push(response.data.choices[0].message);
-  // renderTypewriterText(response.data.choices[0].message.content)
-  console.log(response.data.choices[0].message.content);
 }
 
 function renderTypewriterText(text) {
