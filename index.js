@@ -56,8 +56,7 @@ function fetchReply() {
         presence_penalty: 0,
         frequency_penalty: 0.3,
       });
-      //Render the output, update the array
-      conversationArr.push(response.data.choices[0].message);
+      push(conversationInDb, response.data.choices[0].message);
       renderTypewriterText(response.data.choices[0].message.content);
     } else {
       console.log("No data available");
@@ -80,3 +79,22 @@ function renderTypewriterText(text) {
     chatbotConversation.scrollTop = chatbotConversation.scrollHeight;
   }, 50);
 }
+
+function renderConversationFromDb() {
+  get(conversationInDb).then(async (snapshot) => {
+    if (snapshot.exists()) {
+      Object.values(snapshot.val()).forEach((dbObj) => {
+        const newSpeechBubble = document.createElement("div");
+        newSpeechBubble.classList.add(
+          "speech",
+          `speech-${dbObj.role === "user" ? "human" : "ai"}`
+        );
+        chatbotConversation.appendChild(newSpeechBubble);
+        newSpeechBubble.textContent = dbObj.content;
+      });
+      chatbotConversation.scrollTop = chatbotConversation.scrollHeight;
+    }
+  });
+}
+
+renderConversationFromDb();
